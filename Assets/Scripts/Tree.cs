@@ -7,6 +7,7 @@ public class Tree : MonoBehaviour
 {
     [SerializeField] private Trunk _templateTrunk;
     [SerializeField] private Leaves _templateLeaves;
+    [SerializeField] private Firewood _templateFirewood;
     [SerializeField] private Collider _collider;
 
     [SerializeField] private float _hpMax;
@@ -36,11 +37,14 @@ public class Tree : MonoBehaviour
 
         if (_hpCurrent <= 0)
         {
-            CreateFirewood(_firewoodCountCurrent);
+            CreateFirewoods(_firewoodCountCurrent);
 
-            Trunk trunk = _trunks[_trunks.Count - 1];
-            _trunks.Remove(trunk);
-            Destroy(trunk.gameObject);
+            while (_trunks.Count > 0)
+            {
+                Trunk trunk = _trunks[_trunks.Count - 1];
+                _trunks.Remove(trunk);
+                Destroy(trunk.gameObject);
+            }
             Destroy(_leaves.gameObject);
             _leaves = null;
 
@@ -65,7 +69,7 @@ public class Tree : MonoBehaviour
             {
                 int count = _firewoodCountCurrent - (int)(_firewoodCountMax * hpPercent);
                 if (count > 0)
-                    CreateFirewood(count);
+                    CreateFirewoods(count);
             }
         }
     }
@@ -88,8 +92,26 @@ public class Tree : MonoBehaviour
         IsDestroyed = false;
     }
 
-    private void CreateFirewood(int count)
+    private void CreateFirewoods(int count)
     {
         _firewoodCountCurrent -= count;
+        
+        int[] masses = new int[3];
+
+        for (int i = masses.Length; i >0; i--)
+        {
+            int mass = count / i;
+            count -= mass;
+            masses[i - 1] = mass;
+        }
+
+        for (int i = 0; i < masses.Length; i++)        
+            if (masses[i] > 0)
+            {
+                Firewood firewood = Instantiate(_templateFirewood, transform);
+                firewood.Init(masses[i]);
+                firewood.transform.localPosition = new Vector3(Random.Range(-1f,1f), _trunks.Count, Random.Range(-1f, 1f));
+                firewood.transform.eulerAngles = new Vector3(0, Random.Range(0, 360f), 0);
+            }        
     }
 }
